@@ -2,347 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Sticky Notes • Asianloop</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asianloop Sticky Notes</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%230f172a'/><text x='50%' y='55%' text-anchor='middle' font-size='34' fill='%23fff' font-family='Arial'>N</text></svg>">
-  <style>
-    .drag-handle { cursor: grab; }
-    .drag-handle:active { cursor: grabbing; }
-    /* iOS safe-area support for the floating button */
-    :root { --safe-bottom: env(safe-area-inset-bottom, 12px); }
-  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+  <div class="max-w-3xl mx-auto px-4 py-6">
 
-    <!-- Brand Header -->
-    <div class="bg-white text-slate-900 rounded-2xl shadow-lg ring-1 ring-slate-200 p-4 sm:p-6">
-      <div class="flex flex-col gap-4">
+    <!-- Header -->
+    <div class="bg-white text-slate-900 rounded-2xl shadow-md p-4 sm:p-6">
+      <div class="flex flex-col items-center sm:flex-row sm:justify-between gap-4">
         <!-- Logo + Title -->
-        <div class="flex flex-col items-center text-center sm:flex-row sm:items-center sm:justify-between sm:text-left gap-3">
-          <div class="flex items-center gap-3">
-            <img src="logo.jpg" alt="Asianloop Logo" class="h-12 w-auto rounded-xl ring-1 ring-slate-200 shadow-sm" />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Asianloop Sticky Notes</h1>
-              <p class="text-sm text-slate-600">Fast notes. Local autosave. Export/Import JSON.</p>
-            </div>
+        <div class="flex flex-col items-center sm:flex-row sm:items-center gap-3 text-center sm:text-left">
+          <div class="bg-white rounded-xl shadow p-2">
+            <img src="logo.jpg" alt="Asianloop Logo" class="h-10 w-auto" />
           </div>
-          <!-- Actions: 2-col grid on mobile, inline on desktop -->
-          <div class="w-full sm:w-auto grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-            <button id="newNoteBtn" class="col-span-2 sm:col-span-1 px-4 py-3 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium">+ New</button>
-            <button id="exportBtn" class="px-4 py-3 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium">Export</button>
-            <label class="px-4 py-3 sm:py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-medium text-center cursor-pointer">
-              Import <input id="importInput" type="file" accept="application/json" class="hidden">
-            </label>
-            <button id="clearAllBtn" class="px-4 py-3 sm:py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium">Clear</button>
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold">Asianloop Sticky Notes</h1>
+            <p class="text-xs sm:text-sm text-slate-600">Fast notes • Autosave • Export/Import</p>
           </div>
         </div>
 
-        <!-- Filters (roomier on mobile) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input id="searchInput" placeholder="Search notes…" class="col-span-1 sm:col-span-2 w-full px-4 py-3 rounded-xl bg-white outline-none ring-1 ring-slate-300 focus:ring-2 focus:ring-indigo-600 placeholder-slate-400" />
-          <input id="tagInput" placeholder="#tag filter (optional)" class="w-full px-4 py-3 rounded-xl bg-white outline-none ring-1 ring-slate-300 focus:ring-2 focus:ring-indigo-600 placeholder-slate-400" />
+        <!-- Buttons -->
+        <div class="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+          <button id="newNoteBtn" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm">+ New</button>
+          <button id="exportBtn" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm">Export</button>
+          <label class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-sm cursor-pointer text-center">
+            Import <input id="importInput" type="file" accept="application/json" class="hidden">
+          </label>
+          <button id="clearAllBtn" class="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-sm">Clear</button>
         </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <input id="searchInput" placeholder="Search notes…" class="col-span-2 w-full px-3 py-2 rounded-lg bg-slate-100 outline-none ring-1 ring-slate-300 focus:ring-indigo-500 text-sm" />
+        <input id="tagInput" placeholder="#tag filter" class="w-full px-3 py-2 rounded-lg bg-slate-100 outline-none ring-1 ring-slate-300 focus:ring-indigo-500 text-sm" />
       </div>
     </div>
 
     <!-- Notes Grid -->
-    <div id="notesGrid" class="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
+    <div id="notesGrid" class="mt-6 grid gap-4 grid-cols-1 sm:grid-cols-2"></div>
 
-    <!-- Empty state -->
+    <!-- Empty -->
     <div id="emptyState" class="mt-16 text-center text-slate-400 hidden">
-      <div class="text-6xl mb-4">🗒️</div>
-      <p>No notes yet. Tap <span class="text-indigo-400 font-semibold">New</span> to create one.</p>
+      <p class="text-2xl">🗒️ No notes yet</p>
     </div>
   </div>
 
-  <!-- Floating +New (mobile only) -->
-  <button id="fabNew"
-    class="sm:hidden fixed right-4 bottom-4 z-50 px-5 py-4 rounded-full shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-    style="bottom: calc(1rem + var(--safe-bottom));">
-    + New
-  </button>
-
   <!-- Template -->
   <template id="noteTpl">
-    <!-- Lighter card; generous padding for touch -->
-    <div class="note card group bg-slate-800 rounded-2xl ring-1 ring-slate-700 overflow-hidden">
-      <div class="flex items-center justify-between p-4 border-b border-slate-700">
-        <div class="flex items-center gap-2 min-w-0 flex-1">
-          <img src="logo.jpg" alt="Asianloop" class="h-5 w-auto rounded-md ring-1 ring-slate-600 shrink-0" />
-          <input class="title w-full bg-transparent outline-none placeholder-slate-500 text-base" placeholder="Untitled note" />
-        </div>
-        <div class="flex items-center gap-2 ml-3">
-          <button class="pin px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-sm text-white">Pin</button>
-          <button class="del px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-sm text-white">Delete</button>
+    <div class="note bg-slate-800 rounded-xl p-3 ring-1 ring-slate-700">
+      <div class="flex items-center justify-between mb-2">
+        <input class="title flex-1 bg-transparent outline-none text-sm font-medium placeholder-slate-400" placeholder="Untitled note" />
+        <div class="flex gap-2 ml-2">
+          <button class="pin px-2 py-1 text-xs rounded bg-amber-600 text-white">Pin</button>
+          <button class="del px-2 py-1 text-xs rounded bg-rose-600 text-white">Delete</button>
         </div>
       </div>
-      <div class="p-4">
-        <textarea class="body w-full h-36 bg-transparent outline-none placeholder-slate-500 leading-relaxed text-[15px]" placeholder="Write something…"></textarea>
-        <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <input class="tags w-full bg-slate-900/60 rounded-lg px-3 py-2 outline-none placeholder-slate-500" placeholder="#tags comma or space separated" />
-          <span class="text-xs text-slate-400 ml-0 sm:ml-2 updated"></span>
-        </div>
+      <textarea class="body w-full h-24 bg-transparent outline-none text-sm placeholder-slate-400" placeholder="Write something…"></textarea>
+      <div class="flex justify-between items-center mt-2">
+        <input class="tags flex-1 bg-slate-900/50 rounded px-2 py-1 text-xs outline-none placeholder-slate-500" placeholder="#tags" />
+        <span class="updated text-[11px] text-slate-400 ml-2"></span>
       </div>
     </div>
   </template>
 
   <script>
     const STORAGE_KEY = 'sticky_notes_v1';
-    /** @type {Array<{id:string,title:string,body:string,tags:string[],pinned:boolean,updated:number}>} */
-    let notes = load();
+    let notes = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
     const grid = document.getElementById('notesGrid');
     const tpl = document.getElementById('noteTpl');
-    const emptyState = document.getElementById('emptyState');
-    const searchInput = document.getElementById('searchInput');
-    const tagInput = document.getElementById('tagInput');
-    const fabNew = document.getElementById('fabNew');
+    const empty = document.getElementById('emptyState');
 
-    document.getElementById('newNoteBtn').addEventListener('click', addNewNote);
-    fabNew.addEventListener('click', addNewNote);
+    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
+    function render(){
+      grid.innerHTML = "";
+      if(notes.length === 0){ empty.classList.remove("hidden"); return;}
+      empty.classList.add("hidden");
+      notes.forEach((n,i)=>{
+        const node = tpl.content.cloneNode(true);
+        const title = node.querySelector(".title");
+        const body = node.querySelector(".body");
+        const tags = node.querySelector(".tags");
+        const updated = node.querySelector(".updated");
+        const del = node.querySelector(".del");
+        const pin = node.querySelector(".pin");
 
-    function addNewNote() {
-      const n = createNote();
-      notes.unshift(n);
-      save(); render();
-      // scroll to top so the new note is visible on mobile
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      const data = JSON.stringify(notes, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'notes-backup.json';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
-
-    document.getElementById('importInput').addEventListener('change', e => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const imported = JSON.parse(reader.result);
-          if (Array.isArray(imported)) {
-            const map = new Map(notes.map(n => [n.id, n]));
-            imported.forEach(n => map.set(n.id, normalizeNote(n)));
-            notes = Array.from(map.values()).sort(sorter);
-            save(); render();
-          } else alert('Invalid file');
-        } catch {
-          alert('Invalid JSON');
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    });
-
-    document.getElementById('clearAllBtn').addEventListener('click', () => {
-      if (confirm('Delete ALL notes?')) {
-        notes = [];
-        save(); render();
-      }
-    });
-
-    searchInput.addEventListener('input', render);
-    tagInput.addEventListener('input', render);
-
-    function createNote() {
-      const now = Date.now();
-      return {
-        id: crypto.randomUUID ? crypto.randomUUID() : String(now) + Math.random().toString(36).slice(2),
-        title: '',
-        body: '',
-        tags: [],
-        pinned: false,
-        updated: now,
-      };
-    }
-
-    function normalizeNote(n) {
-      return {
-        id: String(n.id || ''),
-        title: String(n.title || ''),
-        body: String(n.body || ''),
-        tags: Array.isArray(n.tags) ? n.tags.map(t => String(t)) : [],
-        pinned: Boolean(n.pinned),
-        updated: Number(n.updated || Date.now()),
-      };
-    }
-
-    function load() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(normalizeNote).sort(sorter) : [];
-      } catch { return []; }
-    }
-
-    function save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-    }
-
-    function sorter(a, b) {
-      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-      return b.updated - a.updated;
-    }
-
-    function matchesFilters(n) {
-      const q = searchInput.value.trim().toLowerCase();
-      const tag = tagInput.value.trim().toLowerCase().replace(/^#/, '');
-      const qok = !q || n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q) || n.tags.join(' ').toLowerCase().includes(q);
-      const tok = !tag || n.tags.map(t => t.toLowerCase()).includes(tag);
-      return qok && tok;
-    }
-
-    function render() {
-      grid.innerHTML = '';
-      const filtered = notes.filter(matchesFilters).sort(sorter);
-      emptyState.classList.toggle('hidden', filtered.length !== 0);
-
-      filtered.forEach(n => {
-        const node = tpl.content.firstElementChild.cloneNode(true);
-        const title = node.querySelector('.title');
-        const body = node.querySelector('.body');
-        const tags = node.querySelector('.tags');
-        const updated = node.querySelector('.updated');
-        const del = node.querySelector('.del');
-        const pin = node.querySelector('.pin');
-
-        title.value = n.title;
-        body.value = n.body;
-        tags.value = n.tags.join(', ');
+        title.value = n.title; body.value = n.body; tags.value = n.tags.join(", ");
         updated.textContent = new Date(n.updated).toLocaleString();
 
-        const onChange = () => {
-          n.title = title.value;
-          n.body = body.value;
-          n.tags = tags.value.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
-          n.updated = Date.now();
-          save();
-          updated.textContent = new Date(n.updated).toLocaleString();
+        const onChange=()=>{
+          n.title=title.value; n.body=body.value;
+          n.tags=tags.value.split(/[,\s]+/).filter(Boolean);
+          n.updated=Date.now(); save(); updated.textContent=new Date(n.updated).toLocaleString();
         };
-
-        title.addEventListener('input', onChange, { passive: true });
-        body.addEventListener('input', onChange, { passive: true });
-        tags.addEventListener('input', onChange, { passive: true });
-
-        del.addEventListener('click', () => {
-          if (confirm('Delete this note?')) {
-            notes = notes.filter(x => x.id !== n.id);
-            save(); render();
-          }
-        });
-
-        pin.textContent = n.pinned ? 'Unpin' : 'Pin';
-        pin.addEventListener('click', () => {
-          n.pinned = !n.pinned;
-          n.updated = Date.now();
-          save(); render();
-        });
+        title.addEventListener("input", onChange);
+        body.addEventListener("input", onChange);
+        tags.addEventListener("input", onChange);
+        del.addEventListener("click",()=>{notes.splice(i,1);save();render();});
+        pin.addEventListener("click",()=>{n.pinned=!n.pinned;save();render();});
 
         grid.appendChild(node);
       });
-
-      enableDragSort();
     }
 
-    /* Simpler drag: vertical sort by Y position (works great in single-column on mobile) */
-    function enableDragSort() {
-      const cards = Array.from(grid.children);
-      cards.forEach(card => {
-        const handle = card.querySelector('img') || card; // use tiny logo as handle; fallback card
-        let ghost, startY, startX, rect, fromIdx;
-
-        const onPointerDown = (e) => {
-          rect = card.getBoundingClientRect();
-          startY = e.clientY - rect.top;
-          startX = e.clientX - rect.left;
-          fromIdx = Array.from(grid.children).indexOf(card);
-
-          ghost = card.cloneNode(true);
-          ghost.style.opacity = '0.5';
-          ghost.style.pointerEvents = 'none';
-          ghost.classList.add('ring-indigo-600');
-          card.parentNode.insertBefore(ghost, card.nextSibling);
-
-          card.style.position = 'absolute';
-          card.style.width = rect.width + 'px';
-          card.style.height = rect.height + 'px';
-          card.style.left = rect.left - grid.getBoundingClientRect().left + 'px';
-          card.style.top = rect.top - grid.getBoundingClientRect().top + 'px';
-          card.style.zIndex = 50;
-
-          handle.setPointerCapture(e.pointerId);
-        };
-
-        const onPointerMove = (e) => {
-          if (!ghost) return;
-          const gridRect = grid.getBoundingClientRect();
-          const x = e.clientX - gridRect.left - startX;
-          const y = e.clientY - gridRect.top - startY;
-          card.style.left = x + 'px';
-          card.style.top = y + 'px';
-
-          // find where to place ghost by vertical center
-          let before = null;
-          for (const c of Array.from(grid.children)) {
-            if (c === card || c === ghost) continue;
-            const r = c.getBoundingClientRect();
-            if (e.clientY < r.top + r.height / 2) { before = c; break; }
-          }
-          if (before) grid.insertBefore(ghost, before); else grid.appendChild(ghost);
-        };
-
-        const onPointerUp = (e) => {
-          if (!ghost) return;
-          const parent = ghost.parentNode;
-          parent.insertBefore(card, ghost);
-          ghost.remove();
-
-          card.style.position = '';
-          card.style.width = '';
-          card.style.height = '';
-          card.style.left = '';
-          card.style.top = '';
-          card.style.zIndex = '';
-
-          // persist order by DOM sequence
-          const domCards = Array.from(grid.querySelectorAll('.note'));
-          const seq = domCards.map(el => {
-            const t = el.querySelector('.title')?.value || '';
-            const b = el.querySelector('.body')?.value || '';
-            return t + '|' + b.slice(0, 24);
-          });
-
-          const filtered = notes.filter(matchesFilters);
-          const rest = notes.filter(n => !filtered.includes(n));
-
-          filtered.sort((a, b) => {
-            const A = a.title + '|' + a.body.slice(0, 24);
-            const B = b.title + '|' + b.body.slice(0, 24);
-            return seq.indexOf(A) - seq.indexOf(B);
-          });
-
-          notes = [...filtered, ...rest].sort(sorter);
-          save(); render();
-
-          ghost = null;
-        };
-
-        handle.addEventListener('pointerdown', onPointerDown);
-        handle.addEventListener('pointermove', onPointerMove);
-        handle.addEventListener('pointerup', onPointerUp);
-      });
-    }
-
-    // initial paint
+    document.getElementById("newNoteBtn").addEventListener("click",()=>{
+      notes.unshift({title:"",body:"",tags:[],pinned:false,updated:Date.now()});
+      save(); render();
+    });
+    document.getElementById("exportBtn").addEventListener("click",()=>{
+      const blob=new Blob([JSON.stringify(notes,null,2)],{type:"application/json"});
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="notes.json";a.click();
+    });
+    document.getElementById("importInput").addEventListener("change",e=>{
+      const file=e.target.files[0]; if(!file)return;
+      const r=new FileReader();r.onload=()=>{try{notes=JSON.parse(r.result);save();render();}catch{alert("Invalid JSON")}};
+      r.readAsText(file);
+    });
+    document.getElementById("clearAllBtn").addEventListener("click",()=>{if(confirm("Delete all?")){notes=[];save();render();}});
     render();
   </script>
 </body>
