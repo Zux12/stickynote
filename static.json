@@ -1,0 +1,10 @@
+{
+  "root": ".",
+  "clean_urls": true,
+  "routes": {
+    "/": "notes.html"
+  },
+  "headers": {
+    "/**": { "Cache-Control": "no-cache" }
+  }
+}
