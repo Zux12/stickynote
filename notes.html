@@ -15,7 +15,7 @@
         <!-- Logo + Title -->
         <div class="flex flex-col items-center sm:flex-row sm:items-center gap-3 text-center sm:text-left">
           <div class="bg-white rounded-xl shadow p-2">
-            <img src="logo.jpg" alt="Asianloop Logo" class="h-10 w-auto" />
+            <img src="logo.png" alt="Asianloop Logo" class="h-10 w-auto" />
           </div>
           <div>
             <h1 class="text-xl sm:text-2xl font-bold">Asianloop Sticky Notes</h1>
@@ -51,7 +51,8 @@
 
     <!-- Empty -->
     <div id="emptyState" class="mt-16 text-center text-slate-400 hidden">
-      <p class="text-2xl">🗒️ No notes yet</p>
+      <p class="text-2xl">🗒️ No matching notes</p>
+      <p class="mt-1 text-sm">Try clearing the search or tag filter.</p>
     </div>
   </div>
 
@@ -75,18 +76,36 @@
 
   <script>
     const STORAGE_KEY = 'sticky_notes_v1';
+    /** @type {Array<{title:string,body:string,tags:string[],pinned:boolean,updated:number}>} */
     let notes = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
     const grid = document.getElementById('notesGrid');
     const tpl = document.getElementById('noteTpl');
     const empty = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+    const tagInput = document.getElementById('tagInput');
 
-    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
+    // helpers
+    const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    const sorter = (a, b) => (a.pinned === b.pinned ? b.updated - a.updated : a.pinned ? -1 : 1);
+
+    function matchesFilters(n) {
+      const q = searchInput.value.trim().toLowerCase();
+      const tag = tagInput.value.trim().toLowerCase().replace(/^#/, '');
+      const qok = !q
+        || (n.title || '').toLowerCase().includes(q)
+        || (n.body || '').toLowerCase().includes(q)
+        || (n.tags || []).join(' ').toLowerCase().includes(q);
+      const tok = !tag || (n.tags || []).map(t => t.toLowerCase()).includes(tag);
+      return qok && tok;
+    }
+
     function render(){
       grid.innerHTML = "";
-      if(notes.length === 0){ empty.classList.remove("hidden"); return;}
-      empty.classList.add("hidden");
-      notes.forEach((n,i)=>{
+      const filtered = notes.filter(matchesFilters).sort(sorter);
+      empty.classList.toggle("hidden", filtered.length > 0);
+
+      filtered.forEach((n,i)=>{
         const node = tpl.content.cloneNode(true);
         const title = node.querySelector(".title");
         const body = node.querySelector(".body");
@@ -95,19 +114,31 @@
         const del = node.querySelector(".del");
         const pin = node.querySelector(".pin");
 
-        title.value = n.title; body.value = n.body; tags.value = n.tags.join(", ");
-        updated.textContent = new Date(n.updated).toLocaleString();
+        title.value = n.title || "";
+        body.value = n.body || "";
+        tags.value = (n.tags || []).join(", ");
+        updated.textContent = new Date(n.updated || Date.now()).toLocaleString();
 
         const onChange=()=>{
-          n.title=title.value; n.body=body.value;
-          n.tags=tags.value.split(/[,\s]+/).filter(Boolean);
-          n.updated=Date.now(); save(); updated.textContent=new Date(n.updated).toLocaleString();
+          n.title=title.value;
+          n.body=body.value;
+          n.tags=tags.value.split(/[,\s]+/).map(s=>s.trim()).filter(Boolean);
+          n.updated=Date.now();
+          save();
+          updated.textContent=new Date(n.updated).toLocaleString();
         };
         title.addEventListener("input", onChange);
         body.addEventListener("input", onChange);
         tags.addEventListener("input", onChange);
-        del.addEventListener("click",()=>{notes.splice(i,1);save();render();});
-        pin.addEventListener("click",()=>{n.pinned=!n.pinned;save();render();});
+
+        del.addEventListener("click",()=>{
+          const idx = notes.indexOf(n);
+          if (idx > -1) { notes.splice(idx,1); save(); render(); }
+        });
+        pin.textContent = n.pinned ? "Unpin" : "Pin";
+        pin.addEventListener("click",()=>{
+          n.pinned=!n.pinned; n.updated=Date.now(); save(); render();
+        });
 
         grid.appendChild(node);
       });
@@ -116,16 +147,19 @@
     document.getElementById("newNoteBtn").addEventListener("click",()=>{
       notes.unshift({title:"",body:"",tags:[],pinned:false,updated:Date.now()});
       save(); render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     // Export as TXT
     document.getElementById("exportBtn").addEventListener("click",()=>{
       let txt = "";
-      notes.forEach((n,i)=>{
+      const data = notes.slice().sort(sorter);
+      data.forEach((n,i)=>{
         txt += `=== Note ${i+1} ===\n`;
         txt += `Title: ${n.title || "(untitled)"}\n`;
         txt += `Body:\n${n.body || ""}\n`;
-        txt += `Tags: ${n.tags.join(", ")}\n`;
+        txt += `Tags: ${(n.tags||[]).join(", ")}\n`;
+        txt += `Pinned: ${n.pinned ? "Yes" : "No"}\n`;
         txt += `Updated: ${new Date(n.updated).toLocaleString()}\n\n`;
       });
       const blob=new Blob([txt],{type:"text/plain"});
@@ -133,16 +167,43 @@
       a.href=URL.createObjectURL(blob);
       a.download="notes.txt";
       a.click();
+      URL.revokeObjectURL(a.href);
     });
 
-    // Import (still expects JSON backup for now)
+    // Import JSON (structured backup)
     document.getElementById("importInput").addEventListener("change",e=>{
       const file=e.target.files[0]; if(!file)return;
-      const r=new FileReader();r.onload=()=>{try{notes=JSON.parse(r.result);save();render();}catch{alert("Invalid JSON")}};
+      const r=new FileReader();
+      r.onload=()=>{
+        try{
+          const arr = JSON.parse(r.result);
+          if (!Array.isArray(arr)) throw new Error();
+          // normalize
+          notes = arr.map(n=>({
+            title: String(n.title||""),
+            body: String(n.body||""),
+            tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
+            pinned: Boolean(n.pinned),
+            updated: Number(n.updated||Date.now())
+          }));
+          save(); render();
+        }catch{ alert("Invalid JSON backup"); }
+      };
       r.readAsText(file);
+      e.target.value = "";
     });
 
-    document.getElementById("clearAllBtn").addEventListener("click",()=>{if(confirm("Delete all?")){notes=[];save();render();}});
+    document.getElementById("clearAllBtn").addEventListener("click",()=>{
+      if(confirm("Delete all notes?")){
+        notes=[]; save(); render();
+      }
+    });
+
+    // Wire up live filtering
+    searchInput.addEventListener("input", render);
+    tagInput.addEventListener("input", render);
+
+    // initial paint
     render();
   </script>
 </body>
